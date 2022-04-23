@@ -1,19 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.github.schananas</groupId>
-  <artifactId>practical-reactor</artifactId>
-  <version>1.0</version>
+    <groupId>com.github.schananas</groupId>
+    <artifactId>practical-reactor</artifactId>
+    <version>1.0</version>
 
-  <name>Practical Reactor workshop</name>
-  <packaging>pom</packaging>
+    <name>Practical Reactor workshop</name>
+    <packaging>pom</packaging>
 
-  <modules>
-    <module>exercises</module>
-    <module>hint</module>
-  </modules>
+    <modules>
+        <module>exercises</module>
+        <module>hint</module>
+    </modules>
+
+    <repositories>
+        <repository>
+            <id>maven-central</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>maven-central</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
 </project>
