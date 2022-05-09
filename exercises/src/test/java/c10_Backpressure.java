@@ -1,10 +1,12 @@
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscription;
 import reactor.core.Exceptions;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 import reactor.test.StepVerifierOptions;
+import reactor.util.annotation.NonNull;
 
 import java.time.Duration;
 import java.util.List;
@@ -47,8 +49,7 @@ public class c10_Backpressure extends BackpressureBase {
     public void request_and_demand() {
         CopyOnWriteArrayList<Long> requests = new CopyOnWriteArrayList<>();
         Flux<String> messageStream = messageStream1()
-                //todo: change this line only
-                ;
+                .doOnRequest(requests::add);
 
         StepVerifier.create(messageStream, StepVerifierOptions.create().initialRequest(0))
                     .expectSubscription()
@@ -71,8 +72,8 @@ public class c10_Backpressure extends BackpressureBase {
     public void limited_demand() {
         CopyOnWriteArrayList<Long> requests = new CopyOnWriteArrayList<>();
         Flux<String> messageStream = messageStream2()
-                //todo: do your changes here
-                ;
+                .doOnRequest(requests::add)
+                .limitRate(1);
 
         StepVerifier.create(messageStream, StepVerifierOptions.create().initialRequest(0))
                     .expectSubscription()
@@ -93,9 +94,11 @@ public class c10_Backpressure extends BackpressureBase {
      */
     @Test
     public void uuid_generator() {
-        Flux<UUID> uuidGenerator = Flux.create(sink -> {
-            //todo: do your changes here
-        });
+        Flux<UUID> uuidGenerator = Flux.create(sink -> sink.onRequest(num -> {
+            for (int i = 0; i < num; i++) {
+                sink.next(UUID.randomUUID());
+            }
+        }));
 
         StepVerifier.create(uuidGenerator
                                     .doOnNext(System.out::println)
@@ -116,8 +119,7 @@ public class c10_Backpressure extends BackpressureBase {
     @Test
     public void pressure_is_too_much() {
         Flux<String> messageStream = messageStream3()
-                //todo: change this line only
-                ;
+                .onBackpressureError();
 
         StepVerifier.create(messageStream, StepVerifierOptions.create()
                                                               .initialRequest(0))
@@ -137,8 +139,7 @@ public class c10_Backpressure extends BackpressureBase {
     @Test
     public void u_wont_brake_me() {
         Flux<String> messageStream = messageStream4()
-                //todo: change this line only
-                ;
+                .onBackpressureBuffer();
 
         StepVerifier.create(messageStream, StepVerifierOptions.create()
                                                               .initialRequest(0))
@@ -170,16 +171,21 @@ public class c10_Backpressure extends BackpressureBase {
         remoteMessageProducer()
                 .doOnCancel(() -> lockRef.get().countDown())
                 .subscribeWith(new BaseSubscriber<String>() {
-                    //todo: do your changes only within BaseSubscriber class implementation
                     @Override
-                    protected void hookOnSubscribe(Subscription subscription) {
+                    protected void hookOnSubscribe(@NonNull Subscription subscription) {
                         sub.set(subscription);
+                        if (sub.get() != null) {
+                            request(10);
+                        }
                     }
 
                     @Override
-                    protected void hookOnNext(String s) {
+                    protected void hookOnNext(@NonNull String s) {
                         System.out.println(s);
                         count.incrementAndGet();
+                        if (count.get() == 10) {
+                            cancel();
+                        }
                     }
                     //-----------------------------------------------------
                 });
