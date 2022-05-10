@@ -32,8 +32,7 @@ public class c12_Broadcasting extends BroadcastingBase {
     @Test
     public void sharing_is_caring() throws InterruptedException {
         Flux<Message> messages = messageStream()
-                //todo: do your changes here
-                ;
+                .share();
 
         //don't change code below
         Flux<String> userStream = messages.map(m -> m.user);
@@ -60,8 +59,8 @@ public class c12_Broadcasting extends BroadcastingBase {
     @Test
     public void hot_vs_cold() {
         Flux<String> updates = systemUpdates()
-                //todo: do your changes here
-                ;
+                .publish()
+                .autoConnect();
 
         //subscriber 1
         StepVerifier.create(updates.take(3).doOnNext(n -> System.out.println("subscriber 1 got: " + n)))
@@ -82,8 +81,8 @@ public class c12_Broadcasting extends BroadcastingBase {
     @Test
     public void history_lesson() {
         Flux<String> updates = systemUpdates()
-                //todo: do your changes here
-                ;
+                .replay()
+                .autoConnect();
 
         //subscriber 1
         StepVerifier.create(updates.take(3).doOnNext(n -> System.out.println("subscriber 1 got: " + n)))
