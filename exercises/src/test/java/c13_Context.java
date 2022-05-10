@@ -31,8 +31,8 @@ public class c13_Context extends ContextBase {
      * id to the Reactor context. Your task is to extract the correlation id and attach it to the message object.
      */
     public Mono<Message> messageHandler(String payload) {
-        //todo: do your changes withing this method
-        return Mono.just(new Message("set correlation_id from context here", payload));
+        return Mono.deferContextual(contextView ->
+                Mono.just(new Message(contextView.get(HTTP_CORRELATION_ID), payload)));
     }
 
     @Test
@@ -55,9 +55,7 @@ public class c13_Context extends ContextBase {
         Mono<Void> repeat = Mono.deferContextual(ctx -> {
             ctx.get(AtomicInteger.class).incrementAndGet();
             return openConnection();
-        });
-        //todo: change this line only
-        ;
+        }).contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)));
 
         StepVerifier.create(repeat.repeat(4))
                     .thenAwait(Duration.ofSeconds(10))
@@ -78,11 +76,22 @@ public class c13_Context extends ContextBase {
     public void pagination() {
         AtomicInteger pageWithError = new AtomicInteger(); //todo: set this field when error occurs
 
-        //todo: start from here
-        Flux<Integer> results = getPage(1)
+        Flux<Integer> results = Mono.deferContextual(context -> getPage(context.get(AtomicInteger.class).get()))
+                .doOnEach(signal -> {
+                    AtomicInteger pageNumber = signal.getContextView().get(AtomicInteger.class);
+                    if (signal.isOnNext()) {
+                        System.out.println("page retrieved");
+                        pageNumber.incrementAndGet();
+                    } else if (signal.isOnError()) {
+                        pageWithError.set(pageNumber.getAndIncrement());
+                        System.out.println("error retrieving page " + pageWithError.get());
+                    }
+                })
                 .flatMapMany(Page::getResult)
+                .onErrorResume(t -> Mono.empty())
                 .repeat(10)
-                .doOnNext(i -> System.out.println("Received: " + i));
+                .doOnNext(i -> System.out.println("Received: " + i))
+                .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)));
 
 
         //don't change this code
